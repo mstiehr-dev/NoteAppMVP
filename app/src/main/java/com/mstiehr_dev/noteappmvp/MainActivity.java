@@ -1,8 +1,11 @@
 package com.mstiehr_dev.noteappmvp;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -10,6 +13,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -42,13 +47,7 @@ public class MainActivity extends AppCompatActivity implements MainMVP.ViewOps
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Note note = new Note();
-                Date date = new Date();
-
-                note.setText(String.format("dummy note #%d", date.getTime()));
-                note.setDate(date);
-
-                mainPresenter.addNote(note);
+                composeNote();
             }
         });
 
@@ -133,5 +132,39 @@ public class MainActivity extends AppCompatActivity implements MainMVP.ViewOps
 
             return convertView;
         }
+    }
+
+    private void composeNote()
+    {
+        View dialogView = getLayoutInflater().inflate(R.layout.note_dialog_input, null);
+
+        final EditText input = (EditText) dialogView.findViewById(R.id.dialog_note_input);
+
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(dialogView);
+        builder.setTitle("Enter new note");
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Note note = new Note();
+                        Date date = new Date();
+
+                        note.setText(input.getText().toString());
+                        note.setDate(date);
+
+                        mainPresenter.addNote(note);
+                    }
+                });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        builder.create().show();
     }
 }
