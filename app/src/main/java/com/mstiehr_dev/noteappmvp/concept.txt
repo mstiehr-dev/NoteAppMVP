@@ -1,0 +1,14 @@
+
+
+
+MVP
+
+Model: Note, Noterepository implements NoteOps
+
+View: MainActivity implements ViewOps
+
+Presenter: MainPresenter implements PresenterViewOps, PresenterModelOps
+
+
+
+Mainactivity <-> MainPresenter <-> NoteRepository
