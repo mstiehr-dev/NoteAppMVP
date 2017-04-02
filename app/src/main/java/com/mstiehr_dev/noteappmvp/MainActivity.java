@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements MainMVP.ViewOps
     @Override
     public void refreshData()
     {
+        noteAdapter.setNotes(mainPresenter.getNotes());
         noteAdapter.notifyDataSetChanged();
     }
 
@@ -131,6 +132,10 @@ public class MainActivity extends AppCompatActivity implements MainMVP.ViewOps
             tvNoteText.setText(note.getText());
 
             return convertView;
+        }
+
+        public void setNotes(List<Note> notes) {
+            this.notes = notes;
         }
     }
 
