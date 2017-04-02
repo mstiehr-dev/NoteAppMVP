@@ -3,9 +3,14 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 <TextView
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/colorPrimaryMedium"
     android:id="@+id/note_text"
+    android:padding="5px"
+    android:layout_marginBottom="5px"
+    android:layout_marginRight="5px"
+    android:layout_marginLeft="5px"
     android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"
 />
 </LinearLayout>
