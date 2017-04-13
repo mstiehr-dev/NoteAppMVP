@@ -21,14 +21,14 @@ public class MainPresenter implements MainMVP.PresenterViewOps, MainMVP.Presente
     @Override
     public void onNoteAdded()
     {
-        mView.get().showAlert("note successfully added");
+//        mView.get().showAlert("note successfully added");
         mView.get().refreshData();
     }
 
     @Override
     public void onNoteRemoved()
     {
-        mView.get().showAlert("note successfully removed");
+//        mView.get().showAlert("note successfully removed");
     }
 
     @Override

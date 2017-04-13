@@ -33,4 +33,5 @@ dependencies {
     compile 'com.android.support:design:25.3.0'
     testCompile 'junit:junit:4.12'
     compile 'org.greenrobot:greendao:3.2.0'
+    compile 'com.wdullaer:swipeactionadapter:2.0.0'
 }

@@ -1,25 +1,35 @@
-package com.mstiehr_dev.noteappmvp;
+package com.mstiehr_dev.noteappmvp.view;
 
-import android.app.Dialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.mstiehr_dev.noteappmvp.MainMVP;
+import com.mstiehr_dev.noteappmvp.R;
 import com.mstiehr_dev.noteappmvp.model.Note;
+import com.mstiehr_dev.noteappmvp.platform.BackgroundService;
 import com.mstiehr_dev.noteappmvp.presenter.MainPresenter;
+import com.wdullaer.swipeactionadapter.SwipeActionAdapter;
+import com.wdullaer.swipeactionadapter.SwipeDirection;
 
 import java.util.Date;
 import java.util.List;
@@ -31,6 +41,25 @@ public class MainActivity extends AppCompatActivity implements MainMVP.ViewOps
     private View rootView;
     private ListView listview;
     private NoteAdapter noteAdapter;
+    private SwipeActionAdapter mSwipeActionAdapter;
+
+    private Handler messageHandler = new Handler();
+    private BackgroundService.BackgroundBinder backgroundBinder;
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            backgroundBinder = (BackgroundService.BackgroundBinder) service;
+            backgroundBinder.setActivityCallbackHandler(messageHandler);
+            backgroundBinder.setCallbackRunnable(new BackgroundCallback());
+
+            backgroundBinder.doShit();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,14 +77,73 @@ public class MainActivity extends AppCompatActivity implements MainMVP.ViewOps
             @Override
             public void onClick(View view) {
                 composeNote();
+
+                backgroundBinder.doShit();
             }
         });
 
         mainPresenter = new MainPresenter(this);
-
         noteAdapter = new NoteAdapter(mainPresenter.getNotes());
-        listview.setAdapter(noteAdapter);
+
+        mSwipeActionAdapter = new SwipeActionAdapter(noteAdapter);
+        mSwipeActionAdapter.setListView(listview);
+
+        mSwipeActionAdapter.setSwipeActionListener(new SwipeActionAdapter.SwipeActionListener() {
+            @Override
+            public boolean hasActions(int position, SwipeDirection direction) {
+                if(direction.isLeft())
+                    return true;
+                if(direction.isRight())
+                    return true;
+
+                return false;
+            }
+
+            @Override
+            public boolean shouldDismiss(int position, SwipeDirection direction) {
+                return false;
+            }
+
+            @Override
+            public void onSwipe(int[] positions, SwipeDirection[] directions) {
+                for(int i=0; i<positions.length; i++)
+                {
+                    int position = positions[i];
+                    SwipeDirection direction = directions[i];
+
+                    String dir = "";
+                    Note note = (Note) noteAdapter.getItem(position);
+
+                    switch(direction)
+                    {
+                        case DIRECTION_NORMAL_LEFT:
+                        case DIRECTION_FAR_LEFT:
+                            dir = "Far Left - Deleting";
+                            mainPresenter.removeNote(note);
+                            refreshData();
+                            break;
+                        case DIRECTION_NEUTRAL:
+                            dir = "Neutral";
+                            break;
+                        case DIRECTION_NORMAL_RIGHT:
+                            dir = "Normal Right";
+                            break;
+                        case DIRECTION_FAR_RIGHT:
+                            dir = "Far Right";
+                            break;
+                    }
+                    String message = String.format("Position: %d / Direction: %s", position, dir);
+                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        listview.setAdapter(mSwipeActionAdapter);
         listview.setEmptyView(findViewById(R.id.empty));
+
+        final Intent serviceIntent = new Intent(this, BackgroundService.class);
+        startService(serviceIntent);
+        bindService(serviceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -93,6 +181,7 @@ public class MainActivity extends AppCompatActivity implements MainMVP.ViewOps
     {
         noteAdapter.setNotes(mainPresenter.getNotes());
         noteAdapter.notifyDataSetChanged();
+        mSwipeActionAdapter.notifyDataSetChanged();
     }
 
     class NoteAdapter extends BaseAdapter
@@ -124,11 +213,11 @@ public class MainActivity extends AppCompatActivity implements MainMVP.ViewOps
         public View getView(int position, View convertView, ViewGroup parent)
         {
             if(null==convertView)
-                convertView = getLayoutInflater().inflate(R.layout.note_view, null);
+                convertView = getLayoutInflater().inflate(R.layout.note_list_item, null);
 
             final Note note = notes.get(position);
 
-            TextView tvNoteText = (TextView) convertView.findViewById(R.id.note_text);
+            TextView tvNoteText = (TextView) convertView.findViewById(R.id.tv_title);
             tvNoteText.setText(note.getText());
 
             return convertView;
@@ -172,4 +261,16 @@ public class MainActivity extends AppCompatActivity implements MainMVP.ViewOps
 
         builder.create().show();
     }
+
+    public class BackgroundCallback implements Runnable
+    {
+
+        @Override
+        public void run()
+        {
+            Toast.makeText(MainActivity.this, "this is a background call", Toast.LENGTH_LONG).show();
+        }
+    }
+
+
 }
